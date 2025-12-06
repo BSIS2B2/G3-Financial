@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Credit Eligibility Dashboard</title>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    font-family: "Inter", sans-serif;
+    background: url('C:/Users/MRI-USER/OneDrive/Desktop/pig.jpg') no-repeat center center fixed;
+    background-size: cover;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    width: 90%;
+    max-width: 1400px;
+    margin: auto;
+    padding-top: 30px;
+}
+
+/* Header */
+.header {
+    background: rgba(13, 37, 99, 0.9);
+    padding: 40px;
+    border-radius: 14px;
+    color: white;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+.header h1 { margin: 0; font-size: 40px; }
+.header p { opacity: 0.9; }
+
+/* Button */
+button {
+    background: #1d59ff;
+    color: white;
+    padding: 14px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    display: block;
+    margin: 25px auto;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+button:hover { background: #0a2f91; }
+
+/* KPI Cards */
+.kpi-container {
+    display: flex;
+    gap: 20px;
+    margin-top: 30px;
+}
+.kpi-card {
+    flex: 1;
+    background: rgba(143, 135, 216, 0.644); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-align: center;
+}
+.kpi-card h2 { font-size: 32px; margin: 0; }
+.kpi-card p { color: #67c5bd; margin-top: 8px; }
+
+/* Charts Layout */
+.charts {
+    display: flex;
+    gap: 20px;
+    margin-top: 30px;
+}
+.chart-box {
+    flex: 1;
+    background: rgba(255,255,255,0.35); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 35px;
+    background: rgba(255,255,255,0.35); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+th {
+    background: #1d59ff;
+    color: white;
+    padding: 15px;
+}
+td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+}
+tbody tr:hover { background: #f2f4fa; }
+
+.badge-success { background: #d4f8dd; color: #0c8a26; padding: 6px 12px; border-radius: 6px; }
+.badge-danger { background: #ffd6d6; color: #cc0000; padding: 6px 12px; border-radius: 6px; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="header">
+        <h1>Credit Eligibility Dashboard</h1>
+        <p>Analyze 20–50 clients using data structures, algorithms, and visual analytics.</p>
+    </div>
+
+    <!-- Button -->
+    <button id="generate">Generate Clients & Analyze</button>
+
+    <!-- KPI Cards -->
+    <div class="kpi-container">
+        <div class="kpi-card">
+            <h2 id="avgIncome">$0</h2>
+            <p>Average Income</p>
+        </div>
+        <div class="kpi-card">
+            <h2 id="avgDebts">$0</h2>
+            <p>Average Debts</p>
+        </div>
+        <div class="kpi-card">
+            <h2 id="eligibilityRate">0%</h2>
+            <p>Eligibility Rate</p>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts">
+        <div class="chart-box">
+            <canvas id="eligibilityChart"></canvas>
+        </div>
+        <div class="chart-box">
+            <canvas id="scoreChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Income</th>
+                <th>Debts</th>
+                <th>Payment %</th>
+                <th>Score</th>
+                <th>Eligibility</th>
+            </tr>
+        </thead>
+        <tbody id="output"></tbody>
+    </table>
+</div>
+
+<script>
+let pieChart, barChart;
+
+function generateClients(n = 30) {
+    const clients = [];
+    for (let i = 1; i <= n; i++) {
+        const income = Math.floor(Math.random() * 70000) + 30000;
+        const debts = Math.floor(Math.random() * 45000) + 5000;
+        const paymentHistory = Array.from({ length: 12 }, () => Math.random() > 0.25 ? 1 : 0);
+        clients.push({ id: i, income, debts, paymentHistory });
+    }
+    return clients;
+}
+
+function scoreClient(client) {
+    const idr = client.income / client.debts;
+    const paymentPercent = client.paymentHistory.reduce((a, b) => a + b, 0) / 12;
+    const score = 0.5 * idr + 0.5 * paymentPercent;
+    return { score, paymentPercent };
+}
+
+function display(clients) {
+    const tbody = document.getElementById("output");
+    tbody.innerHTML = "";
+
+    clients.forEach(c => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${c.id}</td>
+            <td>$${c.income.toLocaleString()}</td>
+            <td>$${c.debts.toLocaleString()}</td>
+            <td>${(c.paymentPercent * 100).toFixed(1)}%</td>
+            <td>${c.score.toFixed(2)}</td>
+            <td><span class="${c.eligibility === 'Eligible' ? 'badge-success' : 'badge-danger'}">${c.eligibility}</span></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function updateCharts(eligible, notEligible, scores) {
+    if (pieChart) pieChart.destroy();
+    pieChart = new Chart(document.getElementById("eligibilityChart"), {
+        type: 'pie',
+        data: {
+            labels: ["Eligible", "Not Eligible"],
+            datasets: [{ data: [eligible, notEligible], backgroundColor: ["#0c8a26", "#cc0000"] }]
+        }
+    });
+
+    if (barChart) barChart.destroy();
+    barChart = new Chart(document.getElementById("scoreChart"), {
+        type: 'bar',
+        data: {
+            labels: scores.map((_, i) => "Client " + (i+1)),
+            datasets: [{ label: "Score", data: scores, backgroundColor: "#1d59ff" }]
+        }
+    });
+}
+
+document.getElementById("generate").addEventListener("click", () => {
+    let clients = generateClients(30);
+
+    let eligible = 0, notEligible = 0;
+    let scoreList = [];
+    let totalIncome = 0, totalDebts = 0;
+
+    clients = clients.map(c => {
+        const { score, paymentPercent } = scoreClient(c);
+        c.score = score;
+        c.paymentPercent = paymentPercent;
+        c.eligibility = score >= 1.0 ? "Eligible" : "Not Eligible";
+
+        scoreList.push(score);
+        totalIncome += c.income;
+        totalDebts += c.debts;
+
+        if (c.eligibility === "Eligible") eligible++;
+        else notEligible++;
+
+        return c;
+    });
+
+    display(clients);
+
+    document.getElementById("avgIncome").innerText = "$" + Math.round(totalIncome / clients.length).toLocaleString();
+    document.getElementById("avgDebts").innerText = "$" + Math.round(totalDebts / clients.length).toLocaleString();
+    document.getElementById("eligibilityRate").innerText = Math.round((eligible / clients.length) * 100) + "%";
+
+    updateCharts(eligible, notEligible, scoreList);
+});
+</script>
+
+</body>
+</html>
