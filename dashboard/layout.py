@@ -6,7 +6,7 @@ def load_css():
     html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; background-color: #f5f7fa; }
     section[data-testid="stSidebar"] { background-color: #0f172a; }
     section[data-testid="stSidebar"] * { color: white !important; }
-    h1, h2, h3 { font-weight: 600; color: #0f172a; }
+    h1, h2, h3 { font-weight: 600; color: #00ff7f; }
     div[data-testid="metric-container"] {
         background-color: white; border-radius: 12px;
         padding: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
